@@ -133,17 +133,24 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
     DriverObject->MajorFunction[IRP_MJ_CLOSE]          = AfdCreateClose;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatchDeviceControl;
 
+    UNICODE_STRING Sddl;
+
     RtlInitUnicodeString(&DeviceName, AFD_DEVICE_NAME);
     RtlInitUnicodeString(&SymlinkName, AFD_DOS_DEVICE_NAME);
 
-    // Initial open implementation: insecure device creation without DACL
-    Status = IoCreateDevice(
+    // FIX: Secure device creation to mitigate unprivileged access (LOLDrivers: Afd.sys, CVE-2023-21768 / 394f49b2-2d78-4d0d-b374-1399695455f3)
+    // SDDL: D:P(A;;GA;;;SY)(A;;GA;;;BA) - Only SYSTEM and Administrators have access
+    RtlInitUnicodeString(&Sddl, L"D:P(A;;GA;;;SY)(A;;GA;;;BA)");
+
+    Status = IoCreateDeviceSecure(
         DriverObject,
         0,
         &DeviceName,
         AFD_DEVICE_TYPE,
-        0,
+        FILE_DEVICE_SECURE_OPEN,
         FALSE,
+        &Sddl,
+        &GUID_DEVCLASS_AFD,
         &g_AfdDeviceObject
     );
 
@@ -153,6 +160,9 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registry
 
     Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
     if (!NT_SUCCESS(Status)) {
+        // FIX: Clean up device object on symbolic link creation failure to prevent resource leak
+        IoDeleteDevice(g_AfdDeviceObject);
+        g_AfdDeviceObject = NULL;
         return Status;
     }
 
