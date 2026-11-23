@@ -18,17 +18,17 @@ Driver Afd.sys manages Winsock socket endpoints, asynchronous I/O completion not
 
 Fixed vulnerabilities in opensource driver Afd.sys:
 
-- [ ] [LOLDrivers: Afd.sys](https://www.loldrivers.io/drivers/394f49b2-2d78-4d0d-b374-1399695455f3/)
-  - Elevation of Privilege via missing ProbeForWrite in AfdNotifySocket / AfdNotifyRemoveIoCompletion (CVE-2023-21768). Low-privilege users can pass arbitrary kernel addresses in CounterAddress to achieve arbitrary kernel write, corrupt Windows I/O Ring objects or PreviousMode, and elevate privileges to NT AUTHORITY\SYSTEM (BYOVD, MITRE ATT&CK T1068).
+- [x] [LOLDrivers: Afd.sys](https://www.loldrivers.io/drivers/394f49b2-2d78-4d0d-b374-1399695455f3/)
+  - Elevation of Privilege via missing ProbeForWrite in AfdNotifySocket / AfdNotifyRemoveIoCompletion (CVE-2023-21768). Low-privilege users can pass arbitrary kernel addresses in CounterAddress to achieve arbitrary kernel write, corrupt Windows I/O Ring objects or PreviousMode, and elevate privileges to NT AUTHORITY\SYSTEM (BYOVD, MITRE ATT&CK T1068). Fixed by enforcing administrative ACLs on device creation, verifying address bounds below MmHighestUserAddress, requiring ProbeForWrite with alignment verification, and wrapping notification routines in SEH.
 
 Fixed no publish vulnerabilities and bugs which contributors to this project found:
 
-- [ ] Device deletion bypassed on symbolic link creation failure ([view code](main.c))
-- [ ] Arbitrary kernel memory write and missing ProbeForWrite in command 0x00012127 ([view code](notify.c))
-- [ ] Socket endpoint use-after-free and context corruption in command 0x0001203B ([view code](endpoint.c))
-- [ ] Unchecked MDL allocation and non-paged pool memory exhaustion in command 0x0001201F ([view code](transport.c))
-- [ ] Unhandled exception and NULL pointer dereference in control dispatching ([view code](main.c))
-- [ ] Device creation with weak permissions ([view code](main.c))
+- [x] Device deletion bypassed on symbolic link creation failure ([view code](main.c))
+- [x] Arbitrary kernel memory write and missing ProbeForWrite in command 0x00012127 ([view code](notify.c))
+- [x] Socket endpoint use-after-free and context corruption in command 0x0001203B ([view code](endpoint.c))
+- [x] Unchecked MDL allocation and non-paged pool memory exhaustion in command 0x0001201F ([view code](transport.c))
+- [x] Unhandled exception and NULL pointer dereference in control dispatching ([view code](main.c))
+- [x] Device creation with weak permissions ([view code](main.c))
 
 Authors:
 
